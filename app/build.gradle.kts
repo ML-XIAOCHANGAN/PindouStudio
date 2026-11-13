@@ -15,16 +15,34 @@ val keystoreProps = Properties().apply {
 }
 val releaseJks = file(keystoreProps.getProperty("storeFile") ?: "pindou-release.jks")
 
+/**
+ * 完整字库开关。
+ *
+ * **默认 true**：99 款字体全部打包（assets 里 42 款精选 + fonts-full/fonts 里 57 款补充），
+ * 字体约 470MB，APK 会很大（适合自己用网盘分发 / 侧载）。
+ * 想要精简版就加 -PpindouFullFonts=false，只保留精选 42 款（字体约 41MB、APK 约 36MB）。
+ */
+val fullFonts = (project.findProperty("pindouFullFonts") as String?)?.toBoolean() ?: true
+
 android {
     namespace = "com.pindou.studio"
     compileSdk = 34
+
+    sourceSets {
+        getByName("main") {
+            if (fullFonts) {
+                // 只是把字库目录并进 assets/fonts，应用代码无需区分
+                assets.srcDir(rootProject.file("fonts-full"))
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "com.pindou.studio"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 53
+        versionName = "2.19.3"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -75,6 +93,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    // viewModelScope：保存 / 加载协程跟随 ViewModel 生命周期
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")

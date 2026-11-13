@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.PindouStudio" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#FFFBF7F2</item>
-        <item name="android:navigationBarColor">#FFFBF7F2</item>
+        <item name="android:windowBackground">@color/ic_launcher_background</item>
+        <item name="android:statusBarColor">@color/ic_launcher_background</item>
+        <item name="android:navigationBarColor">@color/ic_launcher_background</item>
         <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Android 12+ 系统启动画面：显示品牌图标，底色与应用内开屏一致，
+             系统闪屏结束后紧接着播放应用自己的豆子上色动画 -->
+        <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
     </style>
 </resources>

@@ -18,16 +18,19 @@ class PaletteColor(
     val type: String,
     val hex2: String?,
 ) {
+    // 这三个懒加载值会被 UI 线程和 IO 线程（缩略图 / 导出）同时读到，
+    // 用默认的 SYNCHRONIZED 模式，避免 NONE 模式下多线程首次访问的竞态。
+
     /** 基础色 ARGB。 */
-    val argb: Int by lazy(LazyThreadSafetyMode.NONE) { ColorMath.parseHex(hex) }
+    val argb: Int by lazy { ColorMath.parseHex(hex) }
 
     /** 激活态 ARGB（无双态色时等于基础色）。 */
-    val argb2: Int by lazy(LazyThreadSafetyMode.NONE) {
+    val argb2: Int by lazy {
         hex2?.takeIf { it.isNotBlank() }?.let { ColorMath.parseHex(it) } ?: argb
     }
 
     /** OKLab 坐标，用于最近色匹配。 */
-    val lab: FloatArray by lazy(LazyThreadSafetyMode.NONE) { ColorMath.rgbToOklab(argb) }
+    val lab: FloatArray by lazy { ColorMath.rgbToOklab(argb) }
 
     val isSpecial: Boolean get() = type != TYPE_NORMAL
     val isDualState: Boolean get() = type == TYPE_LIGHT || type == TYPE_TEMPERATURE

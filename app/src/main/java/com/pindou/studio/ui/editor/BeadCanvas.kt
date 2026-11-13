@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -22,6 +23,7 @@ import com.pindou.studio.core.ColorMath
 import com.pindou.studio.core.DisplayResolver
 import com.pindou.studio.core.PaletteColor
 import com.pindou.studio.core.Tool
+import com.pindou.studio.ui.theme.Ds
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -32,7 +34,17 @@ import kotlin.math.min
  * 拼豆画布：负责渲染网格、豆子、色号、选区与底图，并处理单指绘制 / 双指缩放平移。
  */
 @Composable
-fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
+fun BeadCanvas(
+    vm: EditorViewModel,
+    /**
+     * 是否可编辑。false = 只读预览：单指不落笔、不选区，但双指缩放 / 平移仍然可用，
+     * 这样打开作品先看清楚，也不会误触改图。
+     */
+    editable: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    val groundColor = Ds.c.canvasGround
+    val boardColor = Ds.c.surface
     val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG) }
     val textPaint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.MONOSPACE } }
     val rulerPaint = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.MONOSPACE } }
@@ -49,7 +61,7 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                     var transforming = false
                     var prevCentroid: Offset? = null
                     var prevDistance = 0f
-                    vm.onPointerDown(down.position.x, down.position.y)
+                    if (editable) vm.onPointerDown(down.position.x, down.position.y)
                     down.consume()
 
                     while (true) {
@@ -59,7 +71,7 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                         if (pressed.size >= 2) {
                             if (!transforming) {
                                 transforming = true
-                                vm.cancelStroke()
+                                if (editable) vm.cancelStroke()
                             }
                             var cx = 0f
                             var cy = 0f
@@ -87,7 +99,8 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                             val change = pressed.first()
                             if (!transforming) {
                                 val movement = change.position - change.previousPosition
-                                if (vm.tool == Tool.PAN) {
+                                if (vm.tool == Tool.PAN || !editable) {
+                                    // 预览态：单指拖动 = 平移画布（和全屏看图一致的手感）
                                     vm.pan(movement.x, movement.y)
                                 } else {
                                     vm.onPointerMove(change.position.x, change.position.y)
@@ -100,7 +113,7 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                             prevDistance = 0f
                         }
                     }
-                    vm.onPointerUp()
+                    if (editable) vm.onPointerUp()
                 }
             }
     ) {
@@ -129,13 +142,26 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                 val nc = canvas.nativeCanvas
                 nc.save()
                 nc.clipRect(0f, 0f, size.width, size.height)
-                nc.drawColor(0xFFF7F5F1.toInt())
+                nc.drawColor(groundColor.toArgb())
+
+                val boardW = grid.width * zoom
+                val boardH = grid.height * zoom
+
+                // ---- 画布底 ----
+                paint.reset()
+                paint.isAntiAlias = false
+                paint.style = Paint.Style.FILL
+                paint.color = boardColor.toArgb()
+                nc.drawRect(offsetX, offsetY, offsetX + boardW, offsetY + boardH, paint)
 
                 // ---- 底图 ----
+                // 顺序很关键：底图必须画在「画布底」之上、豆子之下，并且裁到画布范围内。
+                // 旧实现先画底图再铺不透明的画布底，底图被整块盖住，只有溢出画布外的那一圈看得见。
                 if (base != null && baseVisible && !base.isRecycled) {
-                    val boardW = grid.width * zoom
-                    val boardH = grid.height * zoom
-                    val fit = min(boardW / base.width, boardH / base.height) * baseScale
+                    val save = nc.save()
+                    nc.clipRect(offsetX, offsetY, offsetX + boardW, offsetY + boardH)
+                    // 100%（baseScale = 1）表示「铺满画布」：按短边把参考图撑满，便于对位描图
+                    val fit = max(boardW / base.width, boardH / base.height) * baseScale
                     val dw = base.width * fit
                     val dh = base.height * fit
                     val dx = offsetX + (boardW - dw) / 2f
@@ -145,14 +171,8 @@ fun BeadCanvas(vm: EditorViewModel, modifier: Modifier = Modifier) {
                     paint.alpha = (baseOpacity * 255).toInt().coerceIn(0, 255)
                     rect.set(dx, dy, dx + dw, dy + dh)
                     nc.drawBitmap(base, null, rect, paint)
+                    nc.restoreToCount(save)
                 }
-
-                // ---- 画布底 ----
-                paint.reset()
-                paint.isAntiAlias = false
-                paint.style = Paint.Style.FILL
-                paint.color = 0xFFFFFFFF.toInt()
-                nc.drawRect(offsetX, offsetY, offsetX + grid.width * zoom, offsetY + grid.height * zoom, paint)
 
                 // ---- 可见格子范围 ----
                 val c0 = max(0, floor((0f - offsetX) / zoom).toInt())

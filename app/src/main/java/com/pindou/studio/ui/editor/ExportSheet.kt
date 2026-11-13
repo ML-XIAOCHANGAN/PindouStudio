@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,12 +40,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pindou.studio.core.ChartExporter
 import com.pindou.studio.core.ChartOptions
+import com.pindou.studio.core.PdfExporter
 import com.pindou.studio.core.SvgExporter
 import com.pindou.studio.core.SvgOptions
 import com.pindou.studio.ui.components.ChipButton
 import com.pindou.studio.ui.components.LabeledSlider
 import com.pindou.studio.ui.components.SectionTitle
 import com.pindou.studio.ui.components.SwitchRow
+import com.pindou.studio.ui.theme.Ds
 import com.pindou.studio.util.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -98,14 +101,15 @@ fun ExportSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = Ds.gutter),
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 160.dp, max = 300.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFFF3F4F6)),
+                .clip(RoundedCornerShape(Ds.rPanel))
+                .background(Ds.c.surface)
+                .border(Ds.stroke, Ds.c.hairline, RoundedCornerShape(Ds.rPanel)),
             contentAlignment = Alignment.Center,
         ) {
             val shown = preview
@@ -165,6 +169,9 @@ fun ExportSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
                                 if (FileUtils.saveBitmapToGallery(context, tile.bitmap, name) != null) saved++
                                 tile.bitmap.recycle()
                             }
+                            if (saved > 0) {
+                                com.pindou.studio.data.ProjectFlags.markExported(context, vm.project.id)
+                            }
                             vm.message = "已保存 $saved 张图纸到相册 Pictures/拼豆工坊"
                         } catch (e: Exception) {
                             vm.message = "导出失败：${e.message}"
@@ -200,6 +207,30 @@ fun ExportSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
         }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ChipButton("导出 PDF 图纸", false) {
+                Thread {
+                    try {
+                        val dir = java.io.File(context.cacheDir, "export").apply { mkdirs() }
+                        val file = java.io.File(dir, FileUtils.timestampName(sanitize(vm.project.name), "pdf"))
+                        val ok = PdfExporter.export(
+                            vm.project.grid,
+                            vm.palette,
+                            buildOptions(if (cellPx >= 20) cellPx else 20),
+                            file,
+                            title,
+                        )
+                        if (ok != null) {
+                            FileUtils.saveFileToDownloads(context, file, file.name, "application/pdf")
+                            com.pindou.studio.data.ProjectFlags.markExported(context, vm.project.id)
+                            vm.message = "PDF 已保存到下载目录"
+                        } else {
+                            vm.message = "PDF 导出失败"
+                        }
+                    } catch (e: Exception) {
+                        vm.message = "PDF 导出失败：${e.message}"
+                    }
+                }.start()
+            }
             ChipButton("导出 SVG 矢量图", false) {
                 Thread {
                     try {
@@ -219,6 +250,7 @@ fun ExportSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
                         val file = java.io.File(dir, FileUtils.timestampName(sanitize(vm.project.name), "svg"))
                         file.writeText(svg)
                         FileUtils.saveFileToDownloads(context, file, file.name, "image/svg+xml")
+                        com.pindou.studio.data.ProjectFlags.markExported(context, vm.project.id)
                         vm.message = "SVG 已保存到下载目录"
                     } catch (e: Exception) {
                         vm.message = "SVG 导出失败：${e.message}"

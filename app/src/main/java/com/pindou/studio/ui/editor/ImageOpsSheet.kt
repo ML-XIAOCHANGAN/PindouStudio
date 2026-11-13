@@ -19,6 +19,7 @@ import com.pindou.studio.ui.components.ChipButton
 import com.pindou.studio.ui.components.IconSquare
 import com.pindou.studio.ui.components.PIcon
 import com.pindou.studio.ui.components.SectionTitle
+import com.pindou.studio.ui.theme.Ds
 
 /** 图像操作面板：翻转 / 旋转 / 对称。 */
 @Composable
@@ -27,7 +28,7 @@ fun ImageOpsSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = Ds.gutter),
     ) {
         SectionTitle("变换")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

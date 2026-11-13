@@ -1,0 +1,797 @@
+{
+ "version": 1,
+ "fonts": [
+  {
+   "file": "cangyunshoushu.ttf",
+   "name": "沧云手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": true,
+   "kb": 10997
+  },
+  {
+   "file": "fengxingshoushu.ttf",
+   "name": "风行手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": true,
+   "kb": 11472
+  },
+  {
+   "file": "chuangyiheiti.ttf",
+   "name": "创艺黑体",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1393
+  },
+  {
+   "file": "dahunheiti.ttf",
+   "name": "大魂黑体",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1694
+  },
+  {
+   "file": "jiankeheiti.ttf",
+   "name": "剑客黑体",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1602
+  },
+  {
+   "file": "xingmouhei.ttf",
+   "name": "星眸黑",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1527
+  },
+  {
+   "file": "quyuanhei.ttf",
+   "name": "趣圆黑",
+   "category": "圆体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1889
+  },
+  {
+   "file": "jingdianrouhei.ttf",
+   "name": "经典柔黑",
+   "category": "圆体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1594
+  },
+  {
+   "file": "gukesong.ttf",
+   "name": "古刻宋",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 3888
+  },
+  {
+   "file": "keshilumingtiiming.ttf",
+   "name": "刻石录明体(I.Ming)",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": true,
+   "kb": 2511
+  },
+  {
+   "file": "xiangsujimuti.ttf",
+   "name": "像素积木体",
+   "category": "像素",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1506
+  },
+  {
+   "file": "xinkehuanti.ttf",
+   "name": "芯科幻体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": true,
+   "kb": 1158
+  },
+  {
+   "file": "aar.ttf",
+   "name": "AAR",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 14
+  },
+  {
+   "file": "abhayalibremedium.ttf",
+   "name": "AbhayaLibre-Medium",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 22
+  },
+  {
+   "file": "abrilfatfaceregular.ttf",
+   "name": "AbrilFatface-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 23
+  },
+  {
+   "file": "aguafinascriptregular.ttf",
+   "name": "AguafinaScript-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 23
+  },
+  {
+   "file": "akronimregular.ttf",
+   "name": "Akronim-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 65
+  },
+  {
+   "file": "badscriptregular.ttf",
+   "name": "BadScript-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 32
+  },
+  {
+   "file": "baloobhairegular.ttf",
+   "name": "BalooBhai-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 37
+  },
+  {
+   "file": "barlowcondensedblack.ttf",
+   "name": "BarlowCondensed-Black",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 30
+  },
+  {
+   "file": "barlowcondensedbold.ttf",
+   "name": "BarlowCondensed-Bold",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 31
+  },
+  {
+   "file": "barlowcondensedsemibold.ttf",
+   "name": "BarlowCondensed-SemiBold",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 31
+  },
+  {
+   "file": "cormorantregular.ttf",
+   "name": "Cormorant-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 71
+  },
+  {
+   "file": "cormorantuprightlight.ttf",
+   "name": "CormorantUpright-Light",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 59
+  },
+  {
+   "file": "dancingscriptbold.ttf",
+   "name": "DancingScript-Bold",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 35
+  },
+  {
+   "file": "dancingscriptregular.ttf",
+   "name": "DancingScript-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 35
+  },
+  {
+   "file": "finelinerscriptwoff.ttf",
+   "name": "Fineliner Script.woff",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 33
+  },
+  {
+   "file": "kaushanscript.ttf",
+   "name": "Kaushanscript",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 28
+  },
+  {
+   "file": "leaguescript.ttf",
+   "name": "League Script",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 39
+  },
+  {
+   "file": "marckscriptregularwoff.ttf",
+   "name": "MarckScriptRegular.woff",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 28
+  },
+  {
+   "file": "montserratblack.ttf",
+   "name": "Montserrat-Black",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 31
+  },
+  {
+   "file": "paralinesregular.otf",
+   "name": "Paralines-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 14
+  },
+  {
+   "file": "playlistscript.otf",
+   "name": "Playlist Script",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 41
+  },
+  {
+   "file": "poiretoneregular.ttf",
+   "name": "PoiretOne-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 28
+  },
+  {
+   "file": "poppinsmedium.ttf",
+   "name": "Poppins-Medium",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 11
+  },
+  {
+   "file": "poppinssemibold.ttf",
+   "name": "Poppins-SemiBold",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 11
+  },
+  {
+   "file": "robotoblackitalic.ttf",
+   "name": "Roboto-BlackItalic",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 31
+  },
+  {
+   "file": "seasideresortnf.ttf",
+   "name": "Seaside Resort NF",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 19
+  },
+  {
+   "file": "typoprodancingscriptregular.ttf",
+   "name": "TypoPRO-DancingScript-Regular",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 24
+  },
+  {
+   "file": "blowbrush.ttf",
+   "name": "blowbrush",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 45
+  },
+  {
+   "file": "kustwoff.ttf",
+   "name": "kust.woff",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 92
+  },
+  {
+   "file": "soulhandwritingfreeversion.ttf",
+   "name": "soul-handwriting_free-version",
+   "category": "英文",
+   "script": "latin",
+   "bundled": true,
+   "kb": 69
+  },
+  {
+   "file": "youngjuchangti.ttf",
+   "name": "YOUNG剧场体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1152
+  },
+  {
+   "file": "mingchao.ttf",
+   "name": "さざなみ明朝",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 2056
+  },
+  {
+   "file": "bingmeishijiazubold.ttf",
+   "name": "冰美式家族-Bold",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1584
+  },
+  {
+   "file": "keshilugangbihetiipencraneb.ttf",
+   "name": "刻石录钢笔鹤体(I.PenCrane-B)",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 3728
+  },
+  {
+   "file": "jianqishoushu.ttf",
+   "name": "剑气手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 19866
+  },
+  {
+   "file": "beijingminyifeiyiyanjiuyuanti.ttf",
+   "name": "北京民艺非遗研究院体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 20913
+  },
+  {
+   "file": "qianzhihe.ttf",
+   "name": "千纸鹤",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 7846
+  },
+  {
+   "file": "bantianyunmeiheishoushu.ttf",
+   "name": "半天云魅黑手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 17083
+  },
+  {
+   "file": "taiwanquanzikuzhengsongtitwsung.ttf",
+   "name": "台湾全字库正宋体(TW-Sung)",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 3138
+  },
+  {
+   "file": "gaobaiqingshu.ttf",
+   "name": "告白情书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 6100
+  },
+  {
+   "file": "guochaoshoushu.ttf",
+   "name": "国潮手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 14643
+  },
+  {
+   "file": "daheiheavy.ttf",
+   "name": "大黑-Heavy",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1694
+  },
+  {
+   "file": "miaobinairouti.ttf",
+   "name": "妙笔奈柔体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 22177
+  },
+  {
+   "file": "miaobiaoxuanti.ttf",
+   "name": "妙笔奥轩体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 9069
+  },
+  {
+   "file": "miaobixiaoyanti.ttf",
+   "name": "妙笔晓燕体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 11342
+  },
+  {
+   "file": "miaobichunmeiti.ttf",
+   "name": "妙笔淳美体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 6645
+  },
+  {
+   "file": "miaobichunmeiti2.ttf",
+   "name": "妙笔醇美体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4070
+  },
+  {
+   "file": "yuesongw2.ttf",
+   "name": "岳宋W2",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4798
+  },
+  {
+   "file": "kaixinxiaoxiaoleti.ttf",
+   "name": "开心消消乐体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 5517
+  },
+  {
+   "file": "yujianshoushu.ttf",
+   "name": "御剑手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 39556
+  },
+  {
+   "file": "siyuansongtiscbold.otf",
+   "name": "思源宋体SC-Bold",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4177
+  },
+  {
+   "file": "siyuansongtischeavy.otf",
+   "name": "思源宋体SC-Heavy",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4204
+  },
+  {
+   "file": "siyuansongtiscmedium.otf",
+   "name": "思源宋体SC-Medium",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 2384
+  },
+  {
+   "file": "siyuansongtiscregular.otf",
+   "name": "思源宋体SC-Regular",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4138
+  },
+  {
+   "file": "shoushuza.ttf",
+   "name": "手書き雑フォント",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 5495
+  },
+  {
+   "file": "xinquhei.ttf",
+   "name": "新曲黑",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 3303
+  },
+  {
+   "file": "dongfengmingchaokochimincho.ttf",
+   "name": "東風明朝（Kochi Mincho）",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1959
+  },
+  {
+   "file": "lengjinghei.ttf",
+   "name": "棱镜黑",
+   "category": "黑体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1242
+  },
+  {
+   "file": "zhengwensongkai.ttf",
+   "name": "正文宋楷",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 3357
+  },
+  {
+   "file": "zhengkuchaojisudutiheavy.ttf",
+   "name": "正酷超级速度体-Heavy",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1582
+  },
+  {
+   "file": "wushuwenti.ttf",
+   "name": "武术文体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 14784
+  },
+  {
+   "file": "shuiyunxingkai.ttf",
+   "name": "水云行楷",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4867
+  },
+  {
+   "file": "shamoyoujuti.ttf",
+   "name": "沙漠邮局体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 11192
+  },
+  {
+   "file": "canglanlishu.ttf",
+   "name": "沧澜隶书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1985
+  },
+  {
+   "file": "liumangtuti.ttf",
+   "name": "流氓兔体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4738
+  },
+  {
+   "file": "haoranzhengqi.ttf",
+   "name": "浩然正气",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 14489
+  },
+  {
+   "file": "qingkansong.ttf",
+   "name": "清刊宋",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4361
+  },
+  {
+   "file": "jiaolvmaoti.ttf",
+   "name": "焦绿猫体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 17326
+  },
+  {
+   "file": "wangchaoti.ttf",
+   "name": "王朝体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4273
+  },
+  {
+   "file": "wanghanzongzhongmingtizhuyin.ttf",
+   "name": "王汉宗中明体注音",
+   "category": "宋体",
+   "script": "zh",
+   "bundled": false,
+   "kb": 3906
+  },
+  {
+   "file": "wanghanzongzhongkaitizhuyin.ttf",
+   "name": "王汉宗中楷体注音",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4029
+  },
+  {
+   "file": "shoujinti.ttf",
+   "name": "瘦金体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4788
+  },
+  {
+   "file": "polangshoushu.ttf",
+   "name": "破浪手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 15919
+  },
+  {
+   "file": "zhifeiji.ttf",
+   "name": "纸飞机",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4487
+  },
+  {
+   "file": "mengqubudaoweng.ttf",
+   "name": "萌趣不倒翁",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 5655
+  },
+  {
+   "file": "mengquruantangti.ttf",
+   "name": "萌趣软糖体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 5242
+  },
+  {
+   "file": "xukongti.ttf",
+   "name": "虚空体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1393
+  },
+  {
+   "file": "caishenti.ttf",
+   "name": "财神体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1874
+  },
+  {
+   "file": "chaojijizhantiheavy.ttf",
+   "name": "超级激战体-Heavy",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1421
+  },
+  {
+   "file": "chaojijiebati.ttf",
+   "name": "超级街霸体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1131
+  },
+  {
+   "file": "zhuimengti.ttf",
+   "name": "追梦体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1631
+  },
+  {
+   "file": "xingshiti.ttf",
+   "name": "醒狮体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 4631
+  },
+  {
+   "file": "jiangmodashengti.ttf",
+   "name": "降魔大圣体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 22300
+  },
+  {
+   "file": "baranshoushu.ttf",
+   "name": "霸燃手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 14448
+  },
+  {
+   "file": "badaoshoushu.ttf",
+   "name": "霸道手书",
+   "category": "手写",
+   "script": "zh",
+   "bundled": false,
+   "kb": 19551
+  },
+  {
+   "file": "guancangshanhaijingti.ttf",
+   "name": "馆藏山海经体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 10660
+  },
+  {
+   "file": "yuwanti.ttf",
+   "name": "鱼丸体",
+   "category": "装饰",
+   "script": "zh",
+   "bundled": false,
+   "kb": 1665
+  }
+ ]
+}

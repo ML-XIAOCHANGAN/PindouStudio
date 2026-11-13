@@ -42,6 +42,7 @@ import com.pindou.studio.core.PaletteColor
 import com.pindou.studio.ui.components.ChipButton
 import com.pindou.studio.ui.components.ColorSwatch
 import com.pindou.studio.ui.components.SectionTitle
+import com.pindou.studio.ui.theme.Ds
 
 /** 调色板面板。 */
 @Composable
@@ -65,7 +66,7 @@ fun PaletteSheetContent(vm: EditorViewModel) {
             }
     }
 
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = Ds.gutter)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier

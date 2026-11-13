@@ -44,6 +44,12 @@ data class QuantizeOptions(
     val saturation: Float = 0f,
     /** 排除的色号（大写）。 */
     val excludedCodes: Set<String> = emptySet(),
+    /** 色数上限，0 表示不限制；超出后把相近的合并到前 N 个最常用色。 */
+    val maxColors: Int = 0,
+    /** 伽马校正，1 表示原样；<1 提亮暗部，>1 压暗。 */
+    val gamma: Float = 1f,
+    /** 去杂点：单格孤立的色块是否并入周围主色。 */
+    val despeckle: Boolean = false,
 )
 
 /**
@@ -250,6 +256,17 @@ object Quantizer {
             }
         }
 
+        // 3.5) 伽马校正
+        if (options.gamma != 1f && options.gamma > 0f) {
+            val inv = 1f / options.gamma
+            for (i in 0 until w * h) {
+                if (!hasCell[i]) continue
+                cellR[i] = 255f * Math.pow((cellR[i] / 255f).toDouble(), inv.toDouble()).toFloat()
+                cellG[i] = 255f * Math.pow((cellG[i] / 255f).toDouble(), inv.toDouble()).toFloat()
+                cellB[i] = 255f * Math.pow((cellB[i] / 255f).toDouble(), inv.toDouble()).toFloat()
+            }
+        }
+
         // 4) 抖动 + 最近色匹配
         for (r in 0 until h) {
             for (c in 0 until w) {
@@ -285,12 +302,76 @@ object Quantizer {
             mergeSimilarColors(grid, palette, options.mergeSimilarity)
         }
 
+        // 5.5) 色数上限：超出后按使用频次保留前 N 色，其余并入最接近的保留色
+        if (options.maxColors > 0) {
+            limitColors(grid, palette, options.maxColors)
+        }
+
+        // 5.6) 去杂点
+        if (options.despeckle) {
+            despeckle(grid)
+        }
+
         // 6) 移除背景
         if (options.removeBackground) {
             removeBackground(grid)
         }
 
         return grid
+    }
+
+    /** 色数上限：按出现频次保留前 N 个色号，其余格子改到最接近的保留色。 */
+    private fun limitColors(grid: BeadGrid, palette: Palette, maxColors: Int) {
+        val counts = HashMap<Int, Int>()
+        for (idx in grid.cells) {
+            val v = idx.toInt()
+            if (v > 0) counts[v] = (counts[v] ?: 0) + 1
+        }
+        if (counts.size <= maxColors) return
+        val keep = counts.entries.sortedByDescending { it.value }.take(maxColors).map { it.key }
+        val labs = keep.map { palette.colorAt(it)?.lab ?: FloatArray(3) }
+        val remap = HashMap<Int, Int>()
+        for ((idx, _) in counts) {
+            if (idx in keep) continue
+            val lab = palette.colorAt(idx)?.lab ?: continue
+            var best = keep[0]
+            var bestD = Float.MAX_VALUE
+            for (i in keep.indices) {
+                val d = ColorMath.oklabDistance(lab, labs[i])
+                if (d < bestD) { bestD = d; best = keep[i] }
+            }
+            remap[idx] = best
+        }
+        for (i in grid.cells.indices) {
+            val v = grid.cells[i].toInt()
+            remap[v]?.let { grid.set(i % grid.width, i / grid.width, it) }
+        }
+    }
+
+    /** 去杂点：把孤立的一格并入周围出现最多的色号。 */
+    private fun despeckle(grid: BeadGrid) {
+        val w = grid.width
+        val h = grid.height
+        val snapshot = grid.cells.copyOf()
+        for (r in 0 until h) for (c in 0 until w) {
+            val v = snapshot[r * w + c].toInt()
+            if (v <= 0) continue
+            val around = HashMap<Int, Int>()
+            var sameCount = 0
+            for (dy in -1..1) for (dx in -1..1) {
+                if (dx == 0 && dy == 0) continue
+                val nc = c + dx
+                val nr = r + dy
+                if (nc !in 0 until w || nr !in 0 until h) continue
+                val nv = snapshot[nr * w + nc].toInt()
+                if (nv <= 0) continue
+                if (nv == v) sameCount++ else around[nv] = (around[nv] ?: 0) + 1
+            }
+            if (sameCount == 0) {
+                val dominant = around.entries.maxByOrNull { it.value }?.key ?: continue
+                grid.set(c, r, dominant)
+            }
+        }
     }
 
     private fun distributeError(

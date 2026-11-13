@@ -3,6 +3,7 @@ package com.pindou.studio
 import android.app.Application
 import android.content.Context
 import com.pindou.studio.data.AppSettings
+import com.pindou.studio.data.InventoryRepository
 import com.pindou.studio.data.PaletteRepository
 import com.pindou.studio.data.ProjectRepository
 
@@ -12,6 +13,7 @@ class PindouApp : Application() {
     val paletteRepository: PaletteRepository by lazy { PaletteRepository(this) }
     val projectRepository: ProjectRepository by lazy { ProjectRepository(this) }
     val settings: AppSettings by lazy { AppSettings(this) }
+    val inventoryRepository: InventoryRepository by lazy { InventoryRepository(this) }
 
     override fun onCreate() {
         super.onCreate()

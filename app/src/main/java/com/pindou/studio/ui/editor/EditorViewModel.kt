@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.pindou.studio.PindouApp
 import com.pindou.studio.core.BeadGrid
 import com.pindou.studio.core.ChartExporter
@@ -21,12 +22,13 @@ import com.pindou.studio.core.Project
 import com.pindou.studio.core.SelectionRect
 import com.pindou.studio.core.SymmetryMode
 import com.pindou.studio.core.Tool
-import kotlinx.coroutines.CoroutineScope
+import com.pindou.studio.data.InventoryRepository
+import com.pindou.studio.data.ProjectPayload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -47,8 +49,10 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     private val projectRepo = appRef.projectRepository
     private val paletteRepo = appRef.paletteRepository
     private val settings = appRef.settings
+    private val inventory = appRef.inventoryRepository
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // 保存 / 加载一律走 viewModelScope + Dispatchers.IO：
+    // 不再自建一个永不 cancel 的 Default 作用域，也不再在主线程读写磁盘。
     private var saveJob: Job? = null
 
     val history = GridHistory()
@@ -71,6 +75,10 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
         private set
 
     var loaded by mutableStateOf(false)
+        private set
+
+    /** 首次加载中（磁盘读取 + 解压都在 IO 线程）。 */
+    var loading by mutableStateOf(false)
         private set
 
     var renderTick by mutableStateOf(0)
@@ -116,6 +124,14 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
 
     var paletteFilter by mutableStateOf("")
 
+    /** 单色隔离：0 关闭，否则只显示该色号（其余淡出）。 */
+    var isolateColor by mutableStateOf(0)
+        private set
+
+    /** 拼制进度变化计数，供工作台重组。 */
+    var progressTick by mutableStateOf(0)
+        private set
+
     // ---------- 笔画状态 ----------
     private var recorder: GridHistory.StrokeRecorder? = null
     private var lastCellC = Int.MIN_VALUE
@@ -133,39 +149,115 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     val lodScale: Int get() = max(1, ceil(MIN_CELL_PX / zoom).toInt())
 
     // ---------- 初始化 ----------
+    /**
+     * 打开工程：JSON 读取、GZIP 解压、底图解码全部在 IO 线程完成，
+     * 主线程只负责把结果塞进 Compose 状态，避免大工程打开时卡住首帧。
+     */
     fun load() {
-        if (loaded) return
-        val loadedPair = projectRepo.load(projectId, paletteRepo)
-        if (loadedPair != null) {
-            project = loadedPair.first
-            palette = loadedPair.second
-        } else {
-            val pal = paletteRepo.byId(settings.lastPaletteId) ?: paletteRepo.default()
-            palette = pal
-            project = Project(
-                id = projectId,
-                name = "新作品",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-                paletteId = pal.id,
-                paletteName = pal.name,
-                grid = BeadGrid(48, 48),
-            )
+        if (loaded || loading) return
+        loading = true
+        viewModelScope.launch {
+            val snapshot = withContext(Dispatchers.IO) {
+                val hadFileBefore = projectRepo.hasFile(projectId)
+                val pair = projectRepo.load(projectId, paletteRepo)
+                val bitmap = pair?.first?.baseImagePath?.let { path ->
+                    runCatching { android.graphics.BitmapFactory.decodeFile(path) }.getOrNull()
+                }
+                LoadResult(pair, bitmap, hadFileBefore)
+            }
+            val loadedPair = snapshot.pair
+            if (loadedPair != null) {
+                project = loadedPair.first
+                palette = loadedPair.second
+            } else {
+                val pal = paletteRepo.byId(settings.lastPaletteId) ?: paletteRepo.default()
+                palette = pal
+                project = Project(
+                    id = projectId,
+                    name = "新作品",
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    paletteId = pal.id,
+                    paletteName = pal.name,
+                    grid = BeadGrid(48, 48),
+                )
+                if (snapshot.hadFile) {
+                    message = "工程文件损坏，已新建空白画布（原文件已另存为 .corrupt 备份）"
+                }
+            }
+            baseImage = snapshot.baseImage
+            colorIndex = if (palette.size > 0) 1 else 0
+            loaded = true
+            loading = false
+            bump()
+            fitToScreen()
         }
-        colorIndex = if (palette.size > 0) 1 else 0
-        project.baseImagePath?.let { path ->
-            runCatching { android.graphics.BitmapFactory.decodeFile(path) }.getOrNull()?.let { baseImage = it }
-        }
-        loaded = true
-        bump()
-        fitToScreen()
     }
+
+    private class LoadResult(
+        val pair: Pair<Project, Palette>?,
+        val baseImage: Bitmap?,
+        val hadFile: Boolean,
+    )
 
     private fun bump() {
         renderTick++
         canUndo = history.canUndo
         canRedo = history.canRedo
     }
+
+    // ---------- 单色隔离 ----------
+    fun toggleIsolate(index: Int) {
+        isolateColor = if (isolateColor == index) 0 else index
+        bump()
+    }
+
+    fun clearIsolate() {
+        if (isolateColor != 0) {
+            isolateColor = 0
+            bump()
+        }
+    }
+
+    // ---------- 拼制进度 ----------
+    fun isDone(c: Int, r: Int): Boolean = project.progress.contains(r * grid.width + c)
+
+    fun toggleProgress(c: Int, r: Int) {
+        if (!grid.inBounds(c, r)) return
+        if (grid.get(c, r) == 0) return
+        val idx = r * grid.width + c
+        if (!project.progress.remove(idx)) project.progress.add(idx)
+        progressTick++
+        scheduleProgressSave()
+    }
+
+    fun clearProgress() {
+        project.progress.clear()
+        progressTick++
+        scheduleProgressSave()
+    }
+
+    fun doneBeads(): Int = project.doneBeads()
+
+    fun totalBeads(): Int = project.totalBeads()
+
+    private var progressSaveJob: Job? = null
+    private fun scheduleProgressSave() {
+        // 打点也算"未保存的改动"，必须在编辑器里点保存才落盘
+        scheduleSave()
+    }
+
+    // ---------- 豆仓缺色 ----------
+    fun shortageNeeds(): List<InventoryRepository.Need> {
+        val usage = HashMap<String, Int>()
+        for ((idx, count) in grid.colorUsage()) {
+            val code = palette.colorAt(idx)?.code ?: continue
+            usage[code] = (usage[code] ?: 0) + count
+        }
+        return inventory.compare(palette, usage)
+    }
+
+    fun inventorySummary(): Pair<Int, Int> = inventory.summary()
 
     // ---------- 视图变换 ----------
     fun updateViewport(w: Int, h: Int) {
@@ -231,6 +323,59 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     fun chooseColor(index: Int) {
         if (index in 1..palette.size) colorIndex = index
         if (tool == Tool.ERASER || tool == Tool.EYEDROPPER) tool = Tool.PEN
+    }
+
+    /**
+     * 是否处于编辑态。
+     *
+     * 打开作品默认进**只读预览**（和模板页一致）：先看清这张图纸，再点「进入编辑」。
+     * 新建 / 从图片生成 / 模板保存后进入的则直接是编辑态。
+     */
+    var editing by mutableStateOf(false)
+        private set
+
+    fun enterEditing() {
+        editing = true
+        bump()
+    }
+
+    fun exitEditing() {
+        editing = false
+        clearSelection()
+        bump()
+    }
+
+    /** 依次切换对称绘制模式，并把当前模式的含义用一句话说明。 */
+    fun cycleSymmetry() {
+        symmetry = when (symmetry) {
+            SymmetryMode.NONE -> SymmetryMode.HORIZONTAL
+            SymmetryMode.HORIZONTAL -> SymmetryMode.VERTICAL
+            SymmetryMode.VERTICAL -> SymmetryMode.QUAD
+            SymmetryMode.QUAD -> SymmetryMode.DIAGONAL
+            SymmetryMode.DIAGONAL -> SymmetryMode.NONE
+        }
+        message = "对称绘制：${symmetry.label} —— ${symmetry.hint}"
+    }
+
+    /**
+     * 放弃本次作品：移入回收站（可恢复）。
+     *
+     * 「从图片生成」这类流程会先建一个工程，如果试完不满意，
+     * 以前只能回首页再从菜单里删，现在编辑器里一步就能丢掉。
+     */
+    fun discardProject() {
+        val id = project.id
+        // 先掐掉所有排队中的保存，再标记为未加载，避免删完又被写回来
+        saveJob?.cancel()
+        progressSaveJob?.cancel()
+        loaded = false
+        saving = false
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                projectRepo.deleteSerialized(id)
+                com.pindou.studio.data.ProjectFlags.forget(getApplication(), id)
+            }
+        }
     }
 
     val activeColorHex: String
@@ -366,10 +511,10 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
 
     private fun doFill(c: Int, r: Int) {
         if (!grid.inBounds(c, r)) return
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         val changed = grid.floodFill(c, r, colorIndex)
         if (changed > 0) {
-            history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+            history.push(before)
             scheduleSave()
             bump()
         }
@@ -443,7 +588,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     private fun endSelection() {
         val snapshot = selectionSnapshot
         if (snapshot != null) {
-            history.push(GridHistory.Snapshot(snapshot.width, snapshot.height, snapshot.cells.copyOf()))
+            history.push(GridHistory.snapshotOf(snapshot))
             scheduleSave()
         }
         selectionSnapshot = null
@@ -474,26 +619,26 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
 
     fun fillSelection() {
         val sel = selection ?: return
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         for (r in sel.top..sel.bottom) {
             for (c in sel.left..sel.right) {
                 if (grid.inBounds(c, r)) grid.set(c, r, colorIndex)
             }
         }
-        history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+        history.push(before)
         scheduleSave()
         bump()
     }
 
     fun deleteSelection() {
         val sel = selection ?: return
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         for (r in sel.top..sel.bottom) {
             for (c in sel.left..sel.right) {
                 if (grid.inBounds(c, r)) grid.set(c, r, 0)
             }
         }
-        history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+        history.push(before)
         scheduleSave()
         bump()
     }
@@ -521,7 +666,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
             message = "剪贴板为空"
             return
         }
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         val originC = selection?.left ?: 0
         val originR = selection?.top ?: 0
         for (r in 0 until clip.height) {
@@ -533,7 +678,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
                 }
             }
         }
-        history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+        history.push(before)
         scheduleSave()
         bump()
     }
@@ -563,9 +708,9 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     }
 
     fun clearCanvas() {
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         grid.clear()
-        history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+        history.push(before)
         selection = null
         scheduleSave()
         bump()
@@ -579,9 +724,9 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     fun rotateCounterClockwise() = applyGridOpReplace { it.rotatedCounterClockwise() }
 
     private fun applyGridOp(op: (BeadGrid) -> Unit) {
-        val before = grid.cells.copyOf()
+        val before = GridHistory.snapshotOf(grid)
         op(grid)
-        history.push(GridHistory.Snapshot(grid.width, grid.height, before))
+        history.push(before)
         selection = null
         scheduleSave()
         bump()
@@ -591,7 +736,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
         val before = grid
         val result = op(grid)
         project.grid = result
-        history.push(GridHistory.Snapshot(before.width, before.height, before.cells.copyOf()))
+        history.push(GridHistory.snapshotOf(before))
         selection = null
         scheduleSave()
         bump()
@@ -608,7 +753,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
         val before = grid
         val resized = grid.resized(w, h, dx, dy)
         project.grid = resized
-        history.push(GridHistory.Snapshot(before.width, before.height, before.cells.copyOf()))
+        history.push(GridHistory.snapshotOf(before))
         selection = null
         scheduleSave()
         bump()
@@ -619,7 +764,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     fun applyImportedGrid(newGrid: BeadGrid) {
         val before = grid
         project.grid = newGrid
-        history.push(GridHistory.Snapshot(before.width, before.height, before.cells.copyOf()))
+        history.push(GridHistory.snapshotOf(before))
         selection = null
         scheduleSave()
         bump()
@@ -630,7 +775,7 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     fun newCanvas(w: Int, h: Int) {
         val before = grid
         project.grid = BeadGrid(w.coerceIn(1, BeadGrid.MAX_SIZE), h.coerceIn(1, BeadGrid.MAX_SIZE))
-        history.push(GridHistory.Snapshot(before.width, before.height, before.cells.copyOf()))
+        history.push(GridHistory.snapshotOf(before))
         selection = null
         scheduleSave()
         bump()
@@ -689,16 +834,34 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
         baseScale = 1f
         if (!persist) return
         if (bitmap == null) {
-            project.baseImagePath?.let { runCatching { java.io.File(it).delete() } }
+            val old = project.baseImagePath
             project.baseImagePath = null
-        } else {
-            runCatching {
-                val file = java.io.File(projectRepo.baseDir(), project.id + ".png")
-                java.io.FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
-                project.baseImagePath = file.absolutePath
+            viewModelScope.launch(Dispatchers.IO) {
+                old?.let { runCatching { java.io.File(it).delete() } }
+            }
+            scheduleSave()
+            return
+        }
+        // PNG 压缩放 IO 线程；路径先记下来，保证这一刻退出编辑器也不会丢掉底图引用
+        val target = java.io.File(projectRepo.baseDir(), project.id + ".png")
+        project.baseImagePath = target.absolutePath
+        markEdited()
+        viewModelScope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    java.io.FileOutputStream(target).use {
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 90, it)
+                    }
+                }.isSuccess
+            }
+            if (ok) {
+                scheduleSave()
+            } else {
+                project.baseImagePath = null
+                message = "底图保存失败"
+                scheduleSave()
             }
         }
-        scheduleSave()
     }
 
     // ---------- 设置 ----------
@@ -725,34 +888,79 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     }
 
     // ---------- 保存 ----------
+    /**
+     * 有未保存的改动（顶栏显示「未保存」，退出时据此弹确认）。
+     *
+     * 和模板页统一：**编辑不再自动落盘**，必须点「保存」或退出时选「保存并退出」才算数。
+     */
+    var dirty by mutableStateOf(false)
+        private set
+
+    /**
+     * 内容变了：只标记"未保存"，不写盘。
+     *
+     * （以前这里是 700ms 防抖自动保存；为了和模板页统一成"确认才保存"，改成纯标记。）
+     */
     fun scheduleSave() {
-        saveJob?.cancel()
-        saveJob = scope.launch {
-            delay(700)
-            persist()
-        }
+        markEdited()
+        dirty = true
     }
 
+    /** 保存到磁盘（唯一的确认口）。不阻塞界面。 */
     fun persistNow() {
-        persist()
+        saveJob?.cancel()
+        submitSave(writeThumbnail = true)
     }
 
-    private fun persist() {
-        try {
-            saving = true
-            projectRepo.save(project, palette)
-            settings.lastPaletteId = palette.id
-            settings.lastProjectId = project.id
-        } catch (_: Exception) {
-        } finally {
-            saving = false
+    private fun submitSave(writeThumbnail: Boolean) {
+        if (!loaded) return
+        val version = editVersion
+        val payload = try {
+            project.touch()
+            ProjectPayload.capture(project, palette)
+        } catch (e: Exception) {
+            message = "保存失败：${e.message}"
+            return
         }
+        settings.lastPaletteId = palette.id
+        settings.lastProjectId = project.id
+        saving = true
+        projectRepo.saveAsync(payload, writeThumbnail) { ok ->
+            saving = false
+            if (ok) {
+                if (version > savedVersion) savedVersion = version
+                if (version >= editVersion) dirty = false
+                saveFailureNotified = false
+            } else if (!saveFailureNotified) {
+                // 只提示一次，避免自动保存失败时反复弹 snackbar
+                saveFailureNotified = true
+                message = "保存失败，请检查存储空间"
+            }
+        }
+    }
+
+    private var saveFailureNotified = false
+
+    /**
+     * 改动版本号 / 已落盘版本号。
+     *
+     * 防抖窗口里改动会被 `saveJob` 取消掉，所以不能只看「有没有在写」，
+     * 得看「最后一次落盘覆盖到了第几次改动」——退出编辑器时据此决定是否再补保存一次。
+     * 两者都只在主线程读写。
+     */
+    private var editVersion = 0
+    private var savedVersion = 0
+
+    /** 每次内容改变后调用：标记有未落盘的改动。 */
+    private fun markEdited() {
+        editVersion++
     }
 
     fun rename(newName: String) {
         if (newName.isBlank()) return
         project.name = newName
         project.touch()
+        markEdited()
         persistNow()
         bump()
     }
@@ -764,7 +972,11 @@ class EditorViewModel(app: Application, private val projectId: String) : Android
     override fun onCleared() {
         super.onCleared()
         saveJob?.cancel()
-        persist()
+        progressSaveJob?.cancel()
+        // viewModelScope 到这里已经被取消，收尾保存交给仓库自己的 IO 作用域写完，
+        // 否则退出编辑器前最后几百毫秒的操作会丢。
+        // 不再在销毁时偷偷保存：没点「保存」的改动就是要丢弃（和模板页一致）
+        baseImage = null
     }
 
     class Factory(private val app: Application, private val projectId: String) : ViewModelProvider.Factory {

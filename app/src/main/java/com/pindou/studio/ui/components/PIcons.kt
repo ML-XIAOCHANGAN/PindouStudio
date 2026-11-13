@@ -18,6 +18,7 @@ enum class PIcon {
     Download, Upload, Image, Resize, More, Close, Trash,
     FlipH, FlipV, RotateCW, RotateCCW, Save, Check, Plus, Back,
     Settings, Eye, Fit, ZoomIn, ZoomOut, Copy, Cut, Paste, Star, Info, Light,
+    ChevronRight, Sparkle, Box, Search, Lock, Expand,
 }
 
 @Composable
@@ -33,7 +34,7 @@ fun PIconView(
 
 private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
     val s = size.minDimension
-    val sw = s * 0.085f
+    val sw = s * 0.09f
     fun p(x: Float, y: Float) = Offset(x * s, y * s)
     fun stroke(width: Float = sw) = Stroke(width = width, cap = StrokeCap.Round)
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, width: Float = sw) =
@@ -44,7 +45,7 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
             line(0.22f, 0.78f, 0.78f, 0.22f)
             line(0.22f, 0.78f, 0.30f, 0.62f)
             line(0.22f, 0.78f, 0.38f, 0.70f)
-            line(0.30f, 0.62f, 0.38f, 0.70f, sw * 0.8f)
+            line(0.30f, 0.62f, 0.38f, 0.70f, sw)
             drawCircle(tint, s * 0.05f, p(0.2f, 0.82f))
         }
         PIcon.Eraser -> {
@@ -55,8 +56,8 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 lineTo(0.50f * s, 0.84f * s)
                 close()
             }
-            drawPath(path, tint, style = stroke(sw * 0.9f))
-            line(0.36f, 0.74f, 0.66f, 0.52f, sw * 0.7f)
+            drawPath(path, tint, style = stroke(sw))
+            line(0.36f, 0.74f, 0.66f, 0.52f, sw)
         }
         PIcon.Bucket -> {
             val path = Path().apply {
@@ -66,13 +67,13 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 lineTo(0.52f * s, 0.72f * s)
                 close()
             }
-            drawPath(path, tint, style = stroke(sw * 0.9f))
+            drawPath(path, tint, style = stroke(sw))
             drawCircle(tint, s * 0.10f, p(0.80f, 0.76f))
         }
         PIcon.Dropper -> {
             line(0.28f, 0.74f, 0.62f, 0.40f, sw)
-            line(0.56f, 0.24f, 0.78f, 0.46f, sw * 1.4f)
-            drawCircle(tint, sw * 0.7f, p(0.24f, 0.78f))
+            line(0.56f, 0.24f, 0.78f, 0.46f, sw)
+            drawCircle(tint, sw, p(0.24f, 0.78f))
         }
         PIcon.Select -> {
             val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(s * 0.10f, s * 0.08f))
@@ -112,10 +113,10 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
         }
         PIcon.Grid -> {
             drawRect(tint, p(0.18f, 0.18f), Size(s * 0.64f, s * 0.64f), style = stroke(sw))
-            line(0.39f, 0.18f, 0.39f, 0.82f, sw * 0.8f)
-            line(0.61f, 0.18f, 0.61f, 0.82f, sw * 0.8f)
-            line(0.18f, 0.39f, 0.82f, 0.39f, sw * 0.8f)
-            line(0.18f, 0.61f, 0.82f, 0.61f, sw * 0.8f)
+            line(0.39f, 0.18f, 0.39f, 0.82f, sw)
+            line(0.61f, 0.18f, 0.61f, 0.82f, sw)
+            line(0.18f, 0.39f, 0.82f, 0.39f, sw)
+            line(0.18f, 0.61f, 0.82f, 0.61f, sw)
         }
         PIcon.Tag -> {
             val path = Path().apply {
@@ -127,10 +128,10 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 close()
             }
             drawPath(path, tint, style = stroke(sw))
-            drawCircle(tint, sw * 0.9f, p(0.36f, 0.5f))
+            drawCircle(tint, sw, p(0.36f, 0.5f))
         }
         PIcon.Symmetry -> {
-            line(0.5f, 0.14f, 0.5f, 0.86f, sw * 0.7f)
+            line(0.5f, 0.14f, 0.5f, 0.86f, sw)
             val path = Path().apply {
                 moveTo(0.42f * s, 0.30f * s); lineTo(0.16f * s, 0.50f * s); lineTo(0.42f * s, 0.70f * s); close()
             }
@@ -185,14 +186,14 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 lineTo(0.70f * s, 0.54f * s)
                 lineTo(0.80f * s, 0.72f * s)
             }
-            drawPath(path, tint, style = stroke(sw * 0.9f))
+            drawPath(path, tint, style = stroke(sw))
         }
         PIcon.Resize -> {
             line(0.20f, 0.20f, 0.44f, 0.20f)
             line(0.20f, 0.20f, 0.20f, 0.44f)
             line(0.80f, 0.80f, 0.56f, 0.80f)
             line(0.80f, 0.80f, 0.80f, 0.56f)
-            line(0.34f, 0.34f, 0.66f, 0.66f, sw * 0.8f)
+            line(0.34f, 0.34f, 0.66f, 0.66f, sw)
         }
         PIcon.More -> {
             drawCircle(tint, s * 0.06f, p(0.5f, 0.24f))
@@ -214,10 +215,10 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 lineTo(0.70f * s, 0.82f * s)
                 lineTo(0.74f * s, 0.30f * s)
             }
-            drawPath(path, tint, style = stroke(sw * 0.9f))
+            drawPath(path, tint, style = stroke(sw))
         }
         PIcon.FlipH -> {
-            line(0.5f, 0.14f, 0.5f, 0.86f, sw * 0.7f)
+            line(0.5f, 0.14f, 0.5f, 0.86f, sw)
             val path = Path().apply {
                 moveTo(0.42f * s, 0.26f * s); lineTo(0.42f * s, 0.74f * s); lineTo(0.16f * s, 0.50f * s); close()
             }
@@ -225,10 +226,10 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
             val path2 = Path().apply {
                 moveTo(0.58f * s, 0.26f * s); lineTo(0.58f * s, 0.74f * s); lineTo(0.84f * s, 0.50f * s); close()
             }
-            drawPath(path2, tint, style = stroke(sw * 0.8f))
+            drawPath(path2, tint, style = stroke(sw))
         }
         PIcon.FlipV -> {
-            line(0.14f, 0.5f, 0.86f, 0.5f, sw * 0.7f)
+            line(0.14f, 0.5f, 0.86f, 0.5f, sw)
             val path = Path().apply {
                 moveTo(0.26f * s, 0.42f * s); lineTo(0.74f * s, 0.42f * s); lineTo(0.50f * s, 0.16f * s); close()
             }
@@ -236,7 +237,7 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
             val path2 = Path().apply {
                 moveTo(0.26f * s, 0.58f * s); lineTo(0.74f * s, 0.58f * s); lineTo(0.50f * s, 0.84f * s); close()
             }
-            drawPath(path2, tint, style = stroke(sw * 0.8f))
+            drawPath(path2, tint, style = stroke(sw))
         }
         PIcon.RotateCW, PIcon.RotateCCW -> {
             val flip = icon == PIcon.RotateCCW
@@ -260,24 +261,24 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
         PIcon.Save -> {
             drawRect(tint, p(0.20f, 0.20f), Size(s * 0.60f, s * 0.60f), style = stroke(sw))
             drawRect(tint, p(0.34f, 0.20f), Size(s * 0.32f, s * 0.20f))
-            drawRect(tint, p(0.32f, 0.54f), Size(s * 0.36f, s * 0.26f), style = stroke(sw * 0.8f))
+            drawRect(tint, p(0.32f, 0.54f), Size(s * 0.36f, s * 0.26f), style = stroke(sw))
         }
         PIcon.Check -> {
-            line(0.24f, 0.52f, 0.42f, 0.70f, sw * 1.2f)
-            line(0.42f, 0.70f, 0.78f, 0.30f, sw * 1.2f)
+            line(0.24f, 0.52f, 0.42f, 0.70f, sw)
+            line(0.42f, 0.70f, 0.78f, 0.30f, sw)
         }
         PIcon.Plus -> {
-            line(0.5f, 0.22f, 0.5f, 0.78f, sw * 1.1f)
-            line(0.22f, 0.5f, 0.78f, 0.5f, sw * 1.1f)
+            line(0.5f, 0.22f, 0.5f, 0.78f, sw)
+            line(0.22f, 0.5f, 0.78f, 0.5f, sw)
         }
         PIcon.Back -> {
-            line(0.60f, 0.22f, 0.34f, 0.50f, sw * 1.1f)
-            line(0.34f, 0.50f, 0.60f, 0.78f, sw * 1.1f)
+            line(0.60f, 0.22f, 0.34f, 0.50f, sw)
+            line(0.34f, 0.50f, 0.60f, 0.78f, sw)
         }
         PIcon.Settings -> {
-            line(0.20f, 0.30f, 0.80f, 0.30f, sw * 0.9f)
-            line(0.20f, 0.50f, 0.80f, 0.50f, sw * 0.9f)
-            line(0.20f, 0.70f, 0.80f, 0.70f, sw * 0.9f)
+            line(0.20f, 0.30f, 0.80f, 0.30f, sw)
+            line(0.20f, 0.50f, 0.80f, 0.50f, sw)
+            line(0.20f, 0.70f, 0.80f, 0.70f, sw)
             drawCircle(tint, s * 0.075f, p(0.38f, 0.30f))
             drawCircle(tint, s * 0.075f, p(0.62f, 0.50f))
             drawCircle(tint, s * 0.075f, p(0.44f, 0.70f))
@@ -289,7 +290,7 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
                 quadraticBezierTo(0.50f * s, 0.84f * s, 0.14f * s, 0.50f * s)
                 close()
             }
-            drawPath(path, tint, style = stroke(sw * 0.9f))
+            drawPath(path, tint, style = stroke(sw))
             drawCircle(tint, s * 0.10f, p(0.5f, 0.5f))
         }
         PIcon.Fit -> {
@@ -305,18 +306,18 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
         PIcon.ZoomIn, PIcon.ZoomOut -> {
             drawCircle(tint, s * 0.24f, p(0.44f, 0.44f), style = stroke(sw))
             line(0.62f, 0.62f, 0.84f, 0.84f, sw)
-            line(0.32f, 0.44f, 0.56f, 0.44f, sw * 0.8f)
-            if (icon == PIcon.ZoomIn) line(0.44f, 0.32f, 0.44f, 0.56f, sw * 0.8f)
+            line(0.32f, 0.44f, 0.56f, 0.44f, sw)
+            if (icon == PIcon.ZoomIn) line(0.44f, 0.32f, 0.44f, 0.56f, sw)
         }
         PIcon.Copy -> {
-            drawRect(tint, p(0.30f, 0.30f), Size(s * 0.46f, s * 0.46f), style = stroke(sw * 0.9f))
-            drawRect(tint, p(0.20f, 0.20f), Size(s * 0.46f, s * 0.46f), style = stroke(sw * 0.9f))
+            drawRect(tint, p(0.30f, 0.30f), Size(s * 0.46f, s * 0.46f), style = stroke(sw))
+            drawRect(tint, p(0.20f, 0.20f), Size(s * 0.46f, s * 0.46f), style = stroke(sw))
         }
         PIcon.Cut -> {
-            line(0.28f, 0.20f, 0.72f, 0.72f, sw * 0.9f)
-            line(0.72f, 0.20f, 0.28f, 0.72f, sw * 0.9f)
-            drawCircle(tint, s * 0.08f, p(0.26f, 0.80f), style = stroke(sw * 0.8f))
-            drawCircle(tint, s * 0.08f, p(0.74f, 0.80f), style = stroke(sw * 0.8f))
+            line(0.28f, 0.20f, 0.72f, 0.72f, sw)
+            line(0.72f, 0.20f, 0.28f, 0.72f, sw)
+            drawCircle(tint, s * 0.08f, p(0.26f, 0.80f), style = stroke(sw))
+            drawCircle(tint, s * 0.08f, p(0.74f, 0.80f), style = stroke(sw))
         }
         PIcon.Paste -> {
             drawRect(tint, p(0.22f, 0.22f), Size(s * 0.56f, s * 0.62f), style = stroke(sw))
@@ -340,13 +341,83 @@ private fun DrawScope.drawIcon(icon: PIcon, tint: Color) {
             drawCircle(tint, s * 0.055f, p(0.5f, 0.32f))
             line(0.5f, 0.44f, 0.5f, 0.68f, sw)
         }
+        PIcon.Box -> {
+            drawRoundRect(
+                tint,
+                topLeft = p(0.18f, 0.34f),
+                size = Size(s * 0.64f, s * 0.50f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(s * 0.06f, s * 0.06f),
+                style = stroke(sw),
+            )
+            line(0.20f, 0.34f, 0.80f, 0.34f, sw)
+            line(0.38f, 0.20f, 0.62f, 0.20f, sw)
+            line(0.38f, 0.20f, 0.38f, 0.34f, sw)
+            line(0.62f, 0.20f, 0.62f, 0.34f, sw)
+            line(0.40f, 0.54f, 0.60f, 0.54f, sw)
+        }
+        PIcon.ChevronRight -> {
+            line(0.42f, 0.28f, 0.62f, 0.50f)
+            line(0.62f, 0.50f, 0.42f, 0.72f)
+        }
+        PIcon.Search -> {
+            drawCircle(tint, s * 0.25f, p(0.44f, 0.44f), style = stroke(sw))
+            line(0.63f, 0.63f, 0.84f, 0.84f)
+        }
+        PIcon.Lock -> {
+            // 锁体
+            drawRoundRect(
+                tint,
+                topLeft = p(0.26f, 0.44f),
+                size = Size(s * 0.48f, s * 0.38f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(s * 0.08f, s * 0.08f),
+                style = stroke(sw),
+            )
+            // 锁梁
+            drawArc(
+                tint,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = p(0.34f, 0.18f),
+                size = Size(s * 0.32f, s * 0.34f),
+                style = stroke(sw),
+            )
+            // 锁孔
+            drawCircle(tint, s * 0.045f, p(0.5f, 0.60f))
+            line(0.5f, 0.63f, 0.5f, 0.72f, sw)
+        }
+        PIcon.Expand -> {
+            // 四角向外扩张 = 全屏
+            line(0.18f, 0.34f, 0.18f, 0.18f)
+            line(0.18f, 0.18f, 0.34f, 0.18f)
+            line(0.82f, 0.34f, 0.82f, 0.18f)
+            line(0.82f, 0.18f, 0.66f, 0.18f)
+            line(0.18f, 0.66f, 0.18f, 0.82f)
+            line(0.18f, 0.82f, 0.34f, 0.82f)
+            line(0.82f, 0.66f, 0.82f, 0.82f)
+            line(0.82f, 0.82f, 0.66f, 0.82f)
+        }
+        PIcon.Sparkle -> {
+            val path = Path().apply {
+                moveTo(0.50f * s, 0.14f * s)
+                lineTo(0.60f * s, 0.40f * s)
+                lineTo(0.86f * s, 0.50f * s)
+                lineTo(0.60f * s, 0.60f * s)
+                lineTo(0.50f * s, 0.86f * s)
+                lineTo(0.40f * s, 0.60f * s)
+                lineTo(0.14f * s, 0.50f * s)
+                lineTo(0.40f * s, 0.40f * s)
+                close()
+            }
+            drawPath(path, tint)
+        }
         PIcon.Light -> {
-            drawCircle(tint, s * 0.18f, p(0.5f, 0.40f), style = stroke(sw * 0.9f))
-            line(0.5f, 0.62f, 0.5f, 0.72f, sw * 0.8f)
-            line(0.38f, 0.76f, 0.62f, 0.76f, sw * 0.8f)
-            line(0.5f, 0.12f, 0.5f, 0.20f, sw * 0.7f)
-            line(0.20f, 0.24f, 0.26f, 0.30f, sw * 0.7f)
-            line(0.80f, 0.24f, 0.74f, 0.30f, sw * 0.7f)
+            drawCircle(tint, s * 0.18f, p(0.5f, 0.40f), style = stroke(sw))
+            line(0.5f, 0.62f, 0.5f, 0.72f, sw)
+            line(0.38f, 0.76f, 0.62f, 0.76f, sw)
+            line(0.5f, 0.12f, 0.5f, 0.20f, sw)
+            line(0.20f, 0.24f, 0.26f, 0.30f, sw)
+            line(0.80f, 0.24f, 0.74f, 0.30f, sw)
         }
     }
 }

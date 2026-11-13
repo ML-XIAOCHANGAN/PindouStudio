@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,9 +48,12 @@ import com.pindou.studio.PindouApp
 import com.pindou.studio.core.Palette
 import com.pindou.studio.core.PaletteColor
 import com.pindou.studio.ui.components.ColorSwatch
+import com.pindou.studio.ui.components.Hairline
 import com.pindou.studio.ui.components.IconSquare
+import com.pindou.studio.ui.components.MetaLabel
 import com.pindou.studio.ui.components.PIcon
-import com.pindou.studio.ui.components.SectionTitle
+import com.pindou.studio.ui.components.SectionHeader
+import com.pindou.studio.ui.theme.Ds
 import com.pindou.studio.util.FileUtils
 import java.io.File
 
@@ -90,87 +94,40 @@ fun PaletteManagerScreen(onBack: () -> Unit) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("色卡管理", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconSquare(PIcon.Back, size = 42) { onBack() }
-                },
-                actions = {
-                    IconSquare(PIcon.Upload, size = 42) { importLauncher.launch("*/*") }
-                    IconSquare(PIcon.Plus, size = 42) { showTextImport = true }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(Ds.c.ground)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = Ds.s1, end = Ds.s2, top = Ds.s1, bottom = Ds.s1),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconSquare(PIcon.Back, size = 40, onClick = onBack)
+            Column(Modifier.weight(1f).padding(horizontal = Ds.s2)) {
+                Text("色卡", style = Ds.h3, color = Ds.c.ink)
+                MetaLabel("${palettes.size} 套 · 内置 ${palettes.count { it.builtin }}")
+            }
+            IconSquare(PIcon.Upload, size = 38) { importLauncher.launch("*/*") }
+            IconSquare(PIcon.Plus, size = 38) { showTextImport = true }
+        }
+        Hairline()
+        LazyColumn(Modifier.fillMaxSize()) {
             val builtin = palettes.filter { it.builtin }
             val user = palettes.filterNot { it.builtin }
             if (user.isNotEmpty()) {
-                item { SectionTitle("我的色卡", "${user.size} 套") }
+                item { SectionHeader("我的色卡", "${user.size} 套") }
                 items(user, key = { it.id }) { palette ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            Modifier
-                                .weight(1f)
-                                .clickable { viewing = palette },
-                        ) {
-                            Text(palette.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                "${palette.size} 色",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        TextButton(onClick = { pendingDelete = palette }) {
-                            Text("删除", color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    PaletteRow(
+                        palette = palette,
+                        onClick = { viewing = palette },
+                        onDelete = { pendingDelete = palette },
+                    )
                 }
             }
-            item { SectionTitle("内置色卡", "${builtin.size} 套") }
+            item { SectionHeader("内置色卡", "${builtin.size} 套") }
             items(builtin, key = { it.id }) { palette ->
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { viewing = palette }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(palette.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                "${palette.size} 色",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Row {
-                            palette.colors.take(6).forEach { c ->
-                                Box(
-                                    Modifier
-                                        .padding(start = 3.dp)
-                                        .size(14.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(Color(c.argb))
-                                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
-                                )
-                            }
-                        }
-                    }
-                }
+                PaletteRow(palette = palette, onClick = { viewing = palette })
             }
-            item { Spacer(Modifier.height(40.dp)) }
+            item { Spacer(Modifier.height(Ds.s8)) }
         }
     }
 
@@ -241,6 +198,46 @@ fun PaletteManagerScreen(onBack: () -> Unit) {
             text = { Text(text) },
             confirmButton = { TextButton(onClick = { message = null }) { Text("好") } },
         )
+    }
+}
+
+@Composable
+private fun PaletteRow(palette: Palette, onClick: () -> Unit, onDelete: (() -> Unit)? = null) {
+    Column {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(start = Ds.gutter, end = Ds.gutter, top = Ds.s3, bottom = Ds.s3),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(palette.name, style = Ds.body, color = Ds.c.ink, maxLines = 1)
+                Spacer(Modifier.height(2.dp))
+                MetaLabel("${palette.size} 色" + if (palette.builtin) " · 内置" else " · 我的")
+            }
+            Row {
+                palette.colors.take(5).forEach { c ->
+                    Box(
+                        Modifier
+                            .padding(start = 4.dp)
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .background(Color(c.argb)),
+                    )
+                }
+            }
+            if (onDelete != null) {
+                Spacer(Modifier.width(Ds.s3))
+                Text(
+                    "删除",
+                    style = Ds.label,
+                    color = Ds.c.accent,
+                    modifier = Modifier.clickable { onDelete() },
+                )
+            }
+        }
+        Box(Modifier.padding(horizontal = Ds.gutter)) { Hairline() }
     }
 }
 

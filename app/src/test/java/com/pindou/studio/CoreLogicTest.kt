@@ -304,4 +304,272 @@ class CoreLogicTest {
         assertEquals(3, restored.grid.get(2, 0))
         assertEquals(2, restored.grid.get(1, 1))
     }
+
+    // ---------------------------------------------------------------- MIX 叠加
+
+    @Test
+    fun mixTopCoversBaseWhenOpaque() {
+        val base = BeadGrid(4, 4)
+        val top = BeadGrid(4, 4)
+        for (r in 0 until 4) for (c in 0 until 4) {
+            base.set(c, r, 1)
+            top.set(c, r, 2)
+        }
+        val out = com.pindou.studio.core.LayerMixer.compose(base, top, opacity = 1f)
+        assertEquals(4, out.width)
+        assertEquals(4, out.height)
+        for (r in 0 until 4) for (c in 0 until 4) {
+            assertEquals(2, out.get(c, r))
+        }
+    }
+
+    @Test
+    fun mixEmptyTopCellsShowBase() {
+        val base = BeadGrid(3, 3)
+        val top = BeadGrid(3, 3)
+        for (r in 0 until 3) for (c in 0 until 3) base.set(c, r, 1)
+        top.set(1, 1, 2)
+        val out = com.pindou.studio.core.LayerMixer.compose(base, top, opacity = 1f)
+        assertEquals(2, out.get(1, 1))
+        assertEquals(1, out.get(0, 0))
+        assertEquals(1, out.get(2, 2))
+    }
+
+    @Test
+    fun mixMaskHidesRegion() {
+        val base = BeadGrid(4, 1)
+        val top = BeadGrid(4, 1)
+        for (c in 0 until 4) {
+            base.set(c, 0, 1)
+            top.set(c, 0, 2)
+        }
+        val mask = com.pindou.studio.core.LayerMixer.freshMask(4, 1)
+        mask[0] = 0f
+        mask[1] = 0f
+        val out = com.pindou.studio.core.LayerMixer.compose(base, top, mask = mask, opacity = 1f)
+        assertEquals(1, out.get(0, 0))
+        assertEquals(1, out.get(1, 0))
+        assertEquals(2, out.get(2, 0))
+        assertEquals(2, out.get(3, 0))
+    }
+
+    @Test
+    fun mixHalfOpacityDithersAboutHalf() {
+        val base = BeadGrid(16, 16)
+        val top = BeadGrid(16, 16)
+        for (r in 0 until 16) for (c in 0 until 16) {
+            base.set(c, r, 1)
+            top.set(c, r, 2)
+        }
+        val out = com.pindou.studio.core.LayerMixer.compose(base, top, opacity = 0.5f, dither = true)
+        var topCount = 0
+        for (r in 0 until 16) for (c in 0 until 16) if (out.get(c, r) == 2) topCount++
+        assertTrue("50% 透明度下上层应占约一半，实际 $topCount/256", topCount in 64..192)
+    }
+
+    @Test
+    fun mixDifferentSizesCenterAlign() {
+        val base = BeadGrid(2, 2)
+        val top = BeadGrid(4, 4)
+        base.set(0, 0, 1)
+        val out = com.pindou.studio.core.LayerMixer.compose(base, top, opacity = 1f)
+        assertEquals(4, out.width)
+        assertEquals(4, out.height)
+        assertEquals(1, out.get(1, 1))
+    }
+
+    @Test
+    fun mergePalettesKeepsBothColorSets() {
+        // 下层只有粉/黄（类似「小花」），上层有紫色/品红（类似「拼豆工坊」）
+        val pink = PaletteColor("F25", "粉", "#E56A8A", "F", PaletteColor.TYPE_NORMAL, null)
+        val yellow = PaletteColor("F24", "黄", "#F2C43C", "F", PaletteColor.TYPE_NORMAL, null)
+        val violet = PaletteColor("P1", "紫", "#6B3FA0", "P", PaletteColor.TYPE_NORMAL, null)
+        val magenta = PaletteColor("P2", "品红", "#C2389B", "P", PaletteColor.TYPE_NORMAL, null)
+        val lower = Palette("small", "小花", listOf(pink, yellow))
+        val upper = Palette("text", "拼豆工坊", listOf(violet, magenta))
+
+        val merged = com.pindou.studio.core.LayerMixer.mergePalettes(lower, upper)
+        assertEquals(4, merged.size)
+        // 下层的索引不能变
+        assertEquals(1, merged.indexOf("F25"))
+        assertEquals(2, merged.indexOf("F24"))
+        // 上层独有的颜色必须还在
+        assertEquals(3, merged.indexOf("P1"))
+        assertEquals(4, merged.indexOf("P2"))
+
+        // 上层网格重映射到合并色卡后，颜色仍是紫/品红，不会被并成粉色
+        val upperGrid = BeadGrid(2, 1)
+        upperGrid.set(0, 0, 1)
+        upperGrid.set(1, 0, 2)
+        val remappedUpper = com.pindou.studio.core.LayerMixer.remap(upperGrid, upper, merged)
+        assertEquals(3, remappedUpper.get(0, 0))
+        assertEquals(4, remappedUpper.get(1, 0))
+
+        // 合成结果里两种上层的颜色都出现
+        val lowerGrid = BeadGrid(2, 1)
+        val out = com.pindou.studio.core.LayerMixer.compose(lowerGrid, remappedUpper, opacity = 1f)
+        assertEquals(3, out.get(0, 0))
+        assertEquals(4, out.get(1, 0))
+    }
+
+    @Test
+    fun remapMovesIndexesBetweenPalettes() {
+        val red = PaletteColor("R1", "红", "#FF0000", "R", PaletteColor.TYPE_NORMAL, null)
+        val blue = PaletteColor("B1", "蓝", "#0000FF", "B", PaletteColor.TYPE_NORMAL, null)
+        val from = Palette("p1", "色卡1", listOf(red, blue))
+        val to = Palette("p2", "色卡2", listOf(blue, red))
+        val src = BeadGrid(2, 1)
+        src.set(0, 0, 1)
+        src.set(1, 0, 2)
+        val out = com.pindou.studio.core.LayerMixer.remap(src, from, to)
+        assertEquals(2, out.get(0, 0))
+        assertEquals(1, out.get(1, 0))
+    }
+
+    @Test
+    fun templatesAreWellFormed() {
+        val templates = com.pindou.studio.core.PatternTemplates.all
+        assertTrue("模板数量应大于 0", templates.isNotEmpty())
+        for (t in templates) {
+            assertTrue("模板 ${t.id} 宽度应大于 0", t.width > 0)
+            assertTrue("模板 ${t.id} 高度应大于 0", t.height > 0)
+            // 每一行都补齐到同一宽度
+            for (row in t.normalizedRows) {
+                assertEquals("模板 ${t.id} 行宽不一致", t.width, row.length)
+            }
+            assertTrue("模板 ${t.id} 应有豆子", t.beadCount > 0)
+            assertTrue("模板 ${t.id} 应有颜色", t.colorCount > 0)
+            // 出现的字符必须在 colors 里，且不能是留白
+            for (row in t.normalizedRows) {
+                for (ch in row) {
+                    if (ch == '.') continue
+                    assertTrue("模板 ${t.id} 缺少字符 $ch 的颜色", t.colors.containsKey(ch))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun templateLibraryHasBasicsAndUniqueIds() {
+        val all = com.pindou.studio.core.PatternTemplates.all
+        // id 必须唯一，否则列表 key 会撞
+        assertEquals(all.size, all.map { it.id }.toSet().size)
+        // 「基础形状」是新手入口，必须有内容
+        assertTrue(com.pindou.studio.core.PatternTemplates.categories().contains("基础形状"))
+        for (id in listOf("shape-heart", "shape-star", "shape-smiley")) {
+            val t = com.pindou.studio.core.PatternTemplates.byId(id)
+            assertNotNull("缺少基础形状模板 $id", t)
+            assertEquals("基础形状", t!!.category)
+            assertTrue("$id 应该有豆子", t.beadCount > 0)
+            assertTrue("$id 不应该有留白行", t.normalizedRows.all { row -> row.any { it != '.' } })
+        }
+    }
+
+    @Test
+    fun templateMapsOntoPalette() {
+        val palette = testPalette()
+        // 模板库在 v2.2.0 整体换血，这里改成取第一张模板，避免写死某个 id
+        val template = com.pindou.studio.core.PatternTemplates.all.first()
+        val grid = template.toGrid(palette)
+        assertEquals(template.width, grid.width)
+        assertEquals(template.height, grid.height)
+        assertEquals(template.beadCount, grid.paintedCount())
+        // 颜色必须落在调色板范围内
+        for (v in grid.cells) {
+            val idx = v.toInt()
+            assertTrue("索引 $idx 越界", idx == 0 || (idx in 1..palette.size))
+        }
+    }
+
+    // ---------------------------------------------------------------- 撤销历史压缩
+
+    @Test
+    fun snapshotSurvivesCompression() {
+        val grid = BeadGrid(200, 200)
+        for (r in 0 until 200) {
+            for (c in 0 until 200 step 3) grid.set(c, r, (r % 5) + 1)
+        }
+        val expected = grid.copy()
+        val history = GridHistory()
+        history.push(GridHistory.snapshotOf(grid))
+
+        grid.flipHorizontal()
+        grid.clear()
+        assertEquals(0, grid.paintedCount())
+
+        val restored = history.undo(grid)!!
+        assertEquals(200, restored.width)
+        for (r in 0 until 200) {
+            for (c in 0 until 200) {
+                assertEquals(expected.get(c, r), restored.get(c, r))
+            }
+        }
+    }
+
+    @Test
+    fun snapshotOfDoesNotRetainTheLiveArray() {
+        val grid = BeadGrid(32, 32)
+        grid.set(1, 1, 3)
+        grid.set(5, 6, 7)
+        val snapshot = GridHistory.snapshotOf(grid)
+        // 快照拍完之后继续改画布，不应该影响快照内容
+        grid.set(1, 1, 9)
+        grid.set(5, 6, 9)
+        val restored = snapshot.restore()
+        assertEquals(3, restored[1 * 32 + 1].toInt())
+        assertEquals(7, restored[6 * 32 + 5].toInt())
+    }
+
+    @Test
+    fun snapshotsAreCompressedNotRawCopies() {
+        // 稀疏画布：压缩后应该远小于「每格 2 字节」的裸拷贝
+        val grid = BeadGrid(512, 512)
+        for (i in 0 until 512) grid.set(i, i, 2)
+        val snapshot = GridHistory.snapshotOf(grid)
+        val rawSize = 512 * 512 * 2
+        assertTrue(
+            "压缩后 ${snapshot.byteSize} 字节，应远小于裸拷贝 ${rawSize} 字节",
+            snapshot.byteSize < rawSize / 10,
+        )
+    }
+
+    @Test
+    fun snapshotBudgetEvictsOldestSnapshots() {
+        val grid = BeadGrid(256, 256)
+        for (i in 0 until 256) grid.set(i, 0, 1)
+        val oneSnapshot = GridHistory.snapshotOf(grid).byteSize.toLong()
+        assertTrue(oneSnapshot > 0)
+        // 预算只够放 3 张左右
+        val history = GridHistory(limit = 80, snapshotBudgetBytes = oneSnapshot * 3 + oneSnapshot / 2)
+        repeat(8) { history.push(GridHistory.snapshotOf(grid)) }
+        assertTrue("快照字节数应受预算约束", history.snapshotBytes() <= oneSnapshot * 3 + oneSnapshot / 2)
+        assertTrue("应保留最近的若干步", history.undoCount in 1..8)
+    }
+
+    @Test
+    fun patchHistoryIsUnaffectedByBudget() {
+        val grid = BeadGrid(16, 8)
+        val history = GridHistory(limit = 80, snapshotBudgetBytes = 1)
+        repeat(10) { i ->
+            val recorder = GridHistory.StrokeRecorder(grid)
+            recorder.record(i, 0, 1)
+            history.push(recorder.build()!!)
+        }
+        assertEquals(10, history.undoCount)
+        assertEquals(0, history.snapshotBytes())
+    }
+
+    @Test
+    fun colorCombosAreConsistent() {
+        val combos = com.pindou.studio.core.ColorCombos.all
+        assertTrue(combos.isNotEmpty())
+        val ids = combos.map { it.id }.toSet()
+        assertEquals(combos.size, ids.size)
+        for (combo in combos) {
+            assertEquals("配色 ${combo.id} 应为 4 色", 4, combo.hexes.size)
+            for (hex in combo.hexes) {
+                assertTrue("配色 ${combo.id} 颜色格式错误: $hex", Regex("^#[0-9A-Fa-f]{6}$").matches(hex))
+            }
+        }
+    }
 }

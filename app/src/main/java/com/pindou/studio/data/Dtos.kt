@@ -85,6 +85,8 @@ data class ProjectDto(
     val baseImagePath: String? = null,
     val note: String = "",
     val beadCount: Int = 0,
+    /** Base64(GZIP(varint)) 的已拼格子下标集合。 */
+    val progress: String = "",
 )
 
 /** pindou-draw 的 .pd 工程文件。 */

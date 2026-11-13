@@ -1,11 +1,41 @@
 package com.pindou.studio.data
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
-/** 简单设置存储（SharedPreferences）。 */
+/** 设置存储（SharedPreferences），主题等关键项用 Compose 状态，改完即时生效。 */
 class AppSettings(context: Context) {
 
     private val prefs = context.getSharedPreferences("pindou_settings", Context.MODE_PRIVATE)
+
+    /** 主题配色 id，见 PindouThemes。 */
+    var themeId: String by mutableStateOf(prefs.getString("themeId", "sea") ?: "sea")
+        private set
+
+    /** 0 跟随系统，1 浅色，2 深色 */
+    var darkMode: Int by mutableStateOf(prefs.getInt("darkMode", 0))
+        private set
+
+    /** 是否看过新手指引。 */
+    var introShown: Boolean by mutableStateOf(prefs.getBoolean("introShown", false))
+        private set
+
+    fun updateTheme(id: String) {
+        themeId = id
+        prefs.edit().putString("themeId", id).apply()
+    }
+
+    fun updateDarkMode(mode: Int) {
+        darkMode = mode
+        prefs.edit().putInt("darkMode", mode).apply()
+    }
+
+    fun updateIntroShown(shown: Boolean) {
+        introShown = shown
+        prefs.edit().putBoolean("introShown", shown).apply()
+    }
 
     var lastPaletteId: String
         get() = prefs.getString("lastPaletteId", "") ?: ""
@@ -38,8 +68,4 @@ class AppSettings(context: Context) {
     var lastProjectId: String
         get() = prefs.getString("lastProjectId", "") ?: ""
         set(value) = prefs.edit().putString("lastProjectId", value).apply()
-
-    var introShown: Boolean
-        get() = prefs.getBoolean("introShown", false)
-        set(value) = prefs.edit().putBoolean("introShown", value).apply()
 }

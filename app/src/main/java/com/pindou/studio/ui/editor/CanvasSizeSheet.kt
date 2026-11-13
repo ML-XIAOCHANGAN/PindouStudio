@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.pindou.studio.core.BeadGrid
 import com.pindou.studio.ui.components.ChipButton
 import com.pindou.studio.ui.components.SectionTitle
+import com.pindou.studio.ui.theme.Ds
 
 /** 画布尺寸面板：扩裁 / 新建。 */
 @Composable
@@ -31,7 +32,7 @@ fun CanvasSizeSheetContent(vm: EditorViewModel, onDone: () -> Unit) {
     var height by remember(vm.project.height) { mutableStateOf(vm.project.height.toString()) }
     var anchor by remember { mutableStateOf(0) }
 
-    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = Ds.gutter)) {
         SectionTitle("当前画布", "${vm.project.width} × ${vm.project.height}")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedTextField(

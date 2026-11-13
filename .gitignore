@@ -21,3 +21,7 @@ Thumbs.db
 
 # 日志
 *.log
+
+# 发布 APK 与完整字体库：体积过大，不入库（发布走 GitHub Releases / 本地构建）
+dist/
+fonts-full/
