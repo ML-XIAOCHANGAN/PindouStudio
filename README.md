@@ -385,7 +385,7 @@ SVG 与 CSV 导出 / .pd 读写往返与无色卡回退 / 创艺工坊模板与�
 sdkmanager "emulator" "system-images;android-34;google_apis;x86_64"
 avdmanager create avd -n pindou34g -k "system-images;android-34;google_apis;x86_64" -d pixel_6
 emulator -avd pindou34g -no-window -gpu swiftshader_indirect
-adb install -r dist/拼豆工坊-v1.0.0-release.apk
+adb install -r app/build/outputs/apk/release/app-release.apk
 adb shell am start -n com.pindou.studio/.MainActivity
 adb emu screenrecord screenshot shot.png     # 无窗口模式下用模拟器控制台截屏
 ```
